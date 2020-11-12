@@ -3,7 +3,7 @@ from BoardClasses import Move
 from BoardClasses import Board
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles. hello
-#this is a test for github
+#this is a test for github 222222
 class StudentAI():
 
     def __init__(self,col,row,p):
