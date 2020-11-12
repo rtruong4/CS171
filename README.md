@@ -1,2 +1,2 @@
-# CS1717
+# CS171
 AI Project for checkers
