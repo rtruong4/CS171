@@ -4,6 +4,7 @@ from BoardClasses import Board
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles. hello
 #comment hello hello
+#this is test3
 class StudentAI():
 
     def __init__(self,col,row,p):
