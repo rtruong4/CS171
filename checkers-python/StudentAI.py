@@ -3,6 +3,7 @@ from BoardClasses import Move
 from BoardClasses import Board
 import math
 import random
+import copy
 import time
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
@@ -47,6 +48,34 @@ class StudentAI():
                 score = ucb
 
         return random.choice(childrenList)
+
+
+
+
+    def simulate(self, board):
+
+        """From the given board, simulate a random game until win, loss, or tie and return the appropriate value"""
+        boardState = copy.deepcopy(board)
+
+
+
+        while True:
+            winner = boardState.is_win(self.color)
+            if winner is not None:
+                if winner == self.color:
+                    return 1
+                elif winner == self.opponent[self.color]:
+                    return 0
+                elif winner == -1:
+                    return 0.5
+                #If winner == 0 do nothing
+
+            allowedMoves = boardState.get_all_possible_moves(self.color)
+            randomMove = random.choice(allowedMoves)
+            boardState.make_move(randomMove, self.color)
+
+
+
 
 
 
