@@ -31,6 +31,14 @@ class StudentAI():
         return move
 
 
+    def traverse(self, node):
+        #Find next unvisited leaf
+        if not node.hasChild():
+            return node #Return node if there aren't any child nodes
+        else:
+            return random.choice(node.childrenList)
+
+
     def backpropogate(self, node, result):
         #Update the current move with the simulation result
         if node.parent == None: return #Stop backpropogating at root node
