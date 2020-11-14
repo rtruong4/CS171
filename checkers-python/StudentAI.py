@@ -25,3 +25,26 @@ class StudentAI():
         move = moves[index][inner_index]
         self.board.make_move(move,self.color)
         return move
+
+
+
+
+class Node():
+
+    def __init__(self, board):
+        self.board = board
+        self.children = []
+        self.parent = None
+
+
+
+    def addChild(self, node):
+        node.parent = self
+        self.children.append(node)
+
+
+    def hasChild(self):
+        return len(self.children) > 0
+
+
+
