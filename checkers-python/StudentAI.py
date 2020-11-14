@@ -32,14 +32,14 @@ class StudentAI():
 
 
     def traverse(self, node):
-        #Find next unvisited leaf
+        #Find next node to traverse
         if not node.hasChild():
-            return node #Return node if there aren't any child nodes
+            return node #Return current node if there are no child nodes
         else:
             for child in node.childrenList:
                 if child.visits == 1:
-                    return child #Return child that hasn't been visited
-            return self.chooseBestChild(node) #Return best child if all children visited
+                    return child #Return child that has not been visited
+            return self.chooseBestChild(node) #Return best child if all children are visited
 
 
     def backpropogate(self, node, result):
