@@ -34,7 +34,19 @@ class StudentAI():
         return move
 
 
-    def mctSearch(self, root):
+
+     def traverse(self, node):
+        #Find next node to traverse
+        if not node.hasChild():
+            return node #Return current node if there are no child nodes
+        else:
+            for child in node.childrenList:
+                if child.visits == 1:
+                    return child #Return child that has not been visited
+            return self.chooseBestChild(node) #Return best child if all children are visited
+
+  
+      def mctSearch(self, root):
 
 
         currentTime = time.time()
@@ -55,9 +67,8 @@ class StudentAI():
             return n.wins/n.visits
 
         return max(node.children, key = visitNum)
-
-
-
+      
+      
     def backpropogate(self, node, result):
         #Update the current move with the simulation result
         if node.parent == None: return #Stop backpropogating at root node
