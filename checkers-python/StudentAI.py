@@ -39,11 +39,13 @@ class Node():
 
 
     def addChild(self, node):
+        #Adds a new child to this node
         node.parent = self
         self.children.append(node)
 
 
     def hasChild(self):
+        #Sees if the child has a node
         return len(self.children) > 0
 
 
