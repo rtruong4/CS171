@@ -115,7 +115,11 @@ class StudentAI():
                         return 0.5
                     #If winner == 0 do nothing
 
-            randomMove = random.choice(allowedMoves)
+
+            index = randint(0, len(allowedMoves) - 1)
+            inner_index = randint(0, len(allowedMoves[index]) - 1)
+            randomMove = allowedMoves[index][inner_index]
+
             boardState.make_move(randomMove, self.color)
 
 
