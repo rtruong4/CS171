@@ -29,12 +29,15 @@ class StudentAI():
 
 
 
+
+
 class Node():
 
-    def __init__(self, board):
+    def __init__(self, board, parent = None):
         self.board = board
         self.children = []
-        self.parent = None
+        self.parent = parent
+        self.visits = 1
 
 
 
