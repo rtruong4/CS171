@@ -25,30 +25,17 @@ class StudentAI():
             self.color = 1
 
 
+        newMove = self.mctSearch(move)
 
-        moves = self.board.get_all_possible_moves(self.color)
-        index = randint(0,len(moves)-1)
-        inner_index =  randint(0,len(moves[index])-1)
-        move = moves[index][inner_index]
         self.board.make_move(move,self.color)
         return move
 
 
 
-     def traverse(self, node):
-        #Find next node to traverse
-        if not node.hasChild():
-            return node #Return current node if there are no child nodes
-        else:
-            for child in node.childrenList:
-                if child.visits == 1:
-                    return child #Return child that has not been visited
-            return self.chooseBestChild(node) #Return best child if all children are visited
+
 
   
-      def mctSearch(self, root):
-
-
+    def mctSearch(self, root):
         currentTime = time.time()
 
         while (time.time() - currentTime) < 15 and len(root.get_all_possible_moves) > 0:
@@ -59,6 +46,16 @@ class StudentAI():
 
         return self.bestMove(root)
 
+
+    def traverse(self, node):
+        #Find next node to traverse
+        if not node.hasChild():
+            return node #Return current node if there are no child nodes
+        else:
+            for child in node.childrenList:
+                if child.visits == 1:
+                    return child #Return child that has not been visited
+            return self.chooseBestChild(node) #Return best child if all children are visited
 
 
     def bestMove(self, node):
