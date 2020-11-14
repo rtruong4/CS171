@@ -31,6 +31,30 @@ class StudentAI():
         return move
 
 
+    def mctSearch(self, root):
+
+
+        currentTime = time.time()
+
+        while (time.time() - currentTime) < 15 and len(root.get_all_possible_moves) > 0:
+            leaf = self.traverse(root)
+            simResult = self.simulate(leaf)
+            self.backpropogate(leaf, simResult)
+
+
+        return self.bestMove(root)
+
+
+
+    def bestMove(self, node):
+
+        def visitNum(n):
+            return n.visits
+
+        return max(node.children, key = visitNum)
+
+
+
     def backpropogate(self, node, result):
         #Update the current move with the simulation result
         if node.parent == None: return #Stop backpropogating at root node
@@ -60,11 +84,10 @@ class StudentAI():
 
 
 
-    def simulate(self, board):
+    def simulate(self, node):
 
         """From the given board, simulate a random game until win, loss, or tie and return the appropriate value"""
-        boardState = copy.deepcopy(board)
-
+        boardState = copy.deepcopy(node.board)
 
 
         while True:
