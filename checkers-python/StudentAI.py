@@ -20,9 +20,12 @@ class StudentAI():
         self.color = 2
     def get_move(self,move):
         if len(move) != 0:
-            self.board.make_move(move,self.opponent[self.color])
+            self.board.make_move(move,self.opponent[self.color]) #A move is given to us and we need to update it on our local board
         else:
             self.color = 1
+
+
+
         moves = self.board.get_all_possible_moves(self.color)
         index = randint(0,len(moves)-1)
         inner_index =  randint(0,len(moves[index])-1)
@@ -31,7 +34,8 @@ class StudentAI():
         return move
 
 
-    def traverse(self, node):
+
+     def traverse(self, node):
         #Find next node to traverse
         if not node.hasChild():
             return node #Return current node if there are no child nodes
@@ -41,7 +45,30 @@ class StudentAI():
                     return child #Return child that has not been visited
             return self.chooseBestChild(node) #Return best child if all children are visited
 
+  
+      def mctSearch(self, root):
 
+
+        currentTime = time.time()
+
+        while (time.time() - currentTime) < 15 and len(root.get_all_possible_moves) > 0:
+            leaf = self.traverse(root)
+            simResult = self.simulate(leaf)
+            self.backpropogate(leaf, simResult)
+
+
+        return self.bestMove(root)
+
+
+
+    def bestMove(self, node):
+
+        def visitNum(n):
+            return n.wins/n.visits
+
+        return max(node.children, key = visitNum)
+      
+      
     def backpropogate(self, node, result):
         #Update the current move with the simulation result
         if node.parent == None: return #Stop backpropogating at root node
@@ -71,11 +98,10 @@ class StudentAI():
 
 
 
-    def simulate(self, board):
+    def simulate(self, node):
 
         """From the given board, simulate a random game until win, loss, or tie and return the appropriate value"""
-        boardState = copy.deepcopy(board)
-
+        boardState = copy.deepcopy(node.board)
 
 
         while True:
@@ -94,12 +120,6 @@ class StudentAI():
 
             randomMove = random.choice(allowedMoves)
             boardState.make_move(randomMove, self.color)
-
-
-
-
-
-
 
 
 
