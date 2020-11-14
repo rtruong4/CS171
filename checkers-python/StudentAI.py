@@ -1,6 +1,9 @@
 from random import randint
 from BoardClasses import Move
 from BoardClasses import Board
+import math
+import random
+import time
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
 class StudentAI():
@@ -27,6 +30,26 @@ class StudentAI():
         return move
 
 
+    def chooseBestChild(self, node, constant = 1):
+        #Choose the best child based on UCB formula
+        score = 0 #Keeps track of best UCB value
+        childrenList = [] #List of nodes in case the UCB value is tied in different children
+        for child in node.children:
+            explore = math.sqrt(math.log(node.visits)/float(child.visits))
+            x = child.wins/child.visits
+            ucb = x + (constant * explore)
+
+            if ucb == score:
+                childrenList.append(child)
+            elif ucb > score:
+                childrenList.clear()
+                childrenList.append(child)
+                score = ucb
+
+        return random.choice(childrenList)
+
+
+
 
 
 
@@ -38,6 +61,7 @@ class Node():
         self.children = []
         self.parent = parent
         self.visits = 1
+        self.wins = 0
 
 
 
