@@ -25,8 +25,8 @@ class StudentAI():
             self.color = 1
 
 
-        newMove = self.mctSearch(move)
-
+        newMove = self.mctSearch(self.board)
+        move = newMove
         self.board.make_move(move,self.color)
         return move
 
