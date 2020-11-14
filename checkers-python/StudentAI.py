@@ -36,7 +36,10 @@ class StudentAI():
         if not node.hasChild():
             return node #Return node if there aren't any child nodes
         else:
-            return random.choice(node.childrenList)
+            for child in node.childrenList:
+                if child.visits == 1:
+                    return child #Return child that hasn't been visited
+            return self.chooseBestChild(node) #Return best child if all children visited
 
 
     def backpropogate(self, node, result):
