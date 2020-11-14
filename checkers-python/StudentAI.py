@@ -32,7 +32,7 @@ class StudentAI():
 
     def backpropogate(self, node, result):
         #Update the current move with the simulation result
-        if node == self.parent: return #Stop backpropogating at root node
+        if node.parent == None: return #Stop backpropogating at root node
         node.visits += 1
         node.wins += result
         self.backpropogate(node.parent) #Recursively call backpropogate function
