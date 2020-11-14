@@ -24,8 +24,8 @@ class StudentAI():
         else:
             self.color = 1
 
-
-        newMove = self.mctSearch(self.board)
+        rootNode = Node(self.board)
+        newMove = self.mctSearch(rootNode)
         move = newMove
         self.board.make_move(move,self.color)
         return move
@@ -38,7 +38,7 @@ class StudentAI():
     def mctSearch(self, root):
         currentTime = time.time()
 
-        while (time.time() - currentTime) < 15 and len(root.get_all_possible_moves) > 0:
+        while (time.time() - currentTime) < 15 and len(root.board.get_all_possible_moves(self.color)) > 0:
             leaf = self.traverse(root)
             simResult = self.simulate(leaf)
             self.backpropogate(leaf, simResult)
