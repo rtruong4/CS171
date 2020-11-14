@@ -31,6 +31,14 @@ class StudentAI():
         return move
 
 
+    def backpropogate(self, node, result):
+        #Update the current move with the simulation result
+        if node.parent == None: return #Stop backpropogating at root node
+        node.visits += 1
+        node.wins += result
+        self.backpropogate(node.parent) #Recursively call backpropogate function
+
+
     def chooseBestChild(self, node, constant = 1):
         #Choose the best child based on UCB formula
         score = 0 #Keeps track of best UCB value
