@@ -60,17 +60,19 @@ class StudentAI():
 
 
         while True:
-            winner = boardState.is_win(self.color)
-            if winner is not None:
-                if winner == self.color:
-                    return 1
-                elif winner == self.opponent[self.color]:
-                    return 0
-                elif winner == -1:
-                    return 0.5
-                #If winner == 0 do nothing
-
             allowedMoves = boardState.get_all_possible_moves(self.color)
+
+            if len(allowedMoves) == 0:
+                winner = boardState.is_win(self.color)
+                if winner is not None:
+                    if winner == self.color:
+                        return 1
+                    elif winner == self.opponent[self.color]:
+                        return 0
+                    elif winner == -1:
+                        return 0.5
+                    #If winner == 0 do nothing
+
             randomMove = random.choice(allowedMoves)
             boardState.make_move(randomMove, self.color)
 
