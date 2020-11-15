@@ -7,6 +7,7 @@ import copy
 import time
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
+
 class StudentAI():
 
     def __init__(self,col,row,p):
@@ -38,8 +39,10 @@ class StudentAI():
     def mctSearch(self, root):
         currentTime = time.time()
 
-        while (time.time() - currentTime) < 2 and len(root.board.get_all_possible_moves(self.color)) > 0:
+
+        while (time.time() - currentTime) < 15 and len(root.board.get_all_possible_moves(self.color)) > 0:
             leaf = self.tree_policy(root)
+
             simResult = self.rollout(leaf)
             self.backpropogate(leaf, simResult)
 
@@ -50,11 +53,11 @@ class StudentAI():
 
 
     def bestMove(self, node):
-        maxVisits = 0
+        maxRatio = 0
         newNode = node
         for i in node.children:
-            if i.wins/i.visits >= maxVisits:
-                maxVisits = i.wins/i.visits
+            if i.wins/i.visits >= maxRatio:
+                maxRatio = i.wins/i.visits
                 newNode = i
 
         return newNode
@@ -75,14 +78,15 @@ class StudentAI():
 
                 allowedMoves = node.board.get_all_possible_moves(node.color)
 
-                newMove = 0
 
+                listOfUnvisited = []
                 for index in range(len(allowedMoves)):
                     for inner_index in range(len(allowedMoves[index])):
                         move = allowedMoves[index][inner_index]
                         if move not in node.visitedMoves:
-                            newMove = move
+                            listOfUnvisited.append(move)
 
+                newMove = random.choice(listOfUnvisited)
 
                 node.visitedMoves.append(newMove)
                 newNode = node.addChild(newMove, node.board, self.color)
@@ -101,7 +105,7 @@ class StudentAI():
 
 
 
-    def chooseBestChild(self, node, constant = 2):
+    def chooseBestChild(self, node, constant = 1.44):
         #Choose the best child based on UCB formula
         score = 0 #Keeps track of best UCB value
         childrenList = [] #List of nodes in case the UCB value is tied in different children
@@ -152,7 +156,7 @@ class StudentAI():
         elif winner == self.opponent[self.color]:
             return 0
         elif winner == -1:
-            return 0.5
+            return 0.8
         else:
             return 0
 
