@@ -25,8 +25,8 @@ class StudentAI():
             self.color = 1
 
         rootNode = Node(self.board)
-        newMove = self.mctSearch(rootNode)
-        move = newMove
+        newMove = self.mctSearch(rootNode) #Returns a node
+        move = newMove #Move is a node type
         self.board.make_move(move,self.color)
         return move
 
@@ -38,7 +38,7 @@ class StudentAI():
     def mctSearch(self, root):
         currentTime = time.time()
 
-        while (time.time() - currentTime) < 15 and len(root.board.get_all_possible_moves(self.color)) > 0:
+        while (time.time() - currentTime) < 2 and len(root.board.get_all_possible_moves(self.color)) > 0:
             leaf = self.traverse(root)
             simResult = self.simulate(leaf)
             self.backpropogate(leaf, simResult)
@@ -47,24 +47,25 @@ class StudentAI():
         return self.bestMove(root)
 
 
-    def traverse(self, node):
-        #Find next node to traverse
-        if not node.hasChild():
-            return node #Return current node if there are no child nodes
-        else:
-            for child in node.childrenList:
-                if child.visits == 1:
-                    return child #Return child that has not been visited
-            return self.chooseBestChild(node) #Return best child if all children are visited
+
+    def checkFullExpand(self, node):
+        return len(node.board.get_all_possible_moves(self.color)) == len(list(node.children))
+
+    # def tree_policy(self, node):
+    #     while not self.is_terminal(node.board):
+    #         if not self.checkFullExpand(node):
+    #             allowedMoves = node.board.get_all_possible_moves(self.color)
+    #
+    #             index = randint(0, len(allowedMoves) - 1)
+    #             inner_index = randint(0, len(allowedMoves[index]) - 1)
+    #             move = allowedMoves[index][inner_index]
+    #
+    #             newBoard = node.board.make_move(move, self.color)
 
 
-    def bestMove(self, node):
 
-        def visitNum(n):
-            return n.wins/n.visits
 
-        return max(node.children, key = visitNum)
-      
+
       
     def backpropogate(self, node, result):
         #Update the current move with the simulation result
@@ -94,33 +95,39 @@ class StudentAI():
 
 
 
+    def is_terminal(self, board):
+        return not len(board.get_all_possible_moves) > 0
 
-    def simulate(self, node):
-
+    def rollout(self, node):
         """From the given board, simulate a random game until win, loss, or tie and return the appropriate value"""
-        boardState = copy.deepcopy(node.board)
+        boardCopy = copy.deepcopy(node.board)
+        currColor = 1
+        while not self.is_terminal(boardCopy):
+            if currColor == 1:
+                color = self.color
+            elif currColor == -1:
+                color = self.opponent[self.color]
 
-
-        while True:
-            allowedMoves = boardState.get_all_possible_moves(self.color)
-
-            if len(allowedMoves) == 0:
-                winner = boardState.is_win(self.color)
-                if winner is not None:
-                    if winner == self.color:
-                        return 1
-                    elif winner == self.opponent[self.color]:
-                        return 0
-                    elif winner == -1:
-                        return 0.5
-                    #If winner == 0 do nothing
-
+            allowedMoves = boardCopy.get_all_possible_moves(color)
 
             index = randint(0, len(allowedMoves) - 1)
             inner_index = randint(0, len(allowedMoves[index]) - 1)
-            randomMove = allowedMoves[index][inner_index]
+            move = allowedMoves[index][inner_index]
 
-            boardState.make_move(randomMove, self.color)
+            boardCopy.make_move(move, color)
+            color *= -1
+
+        winner = boardCopy.is_win(self.color)
+        if winner is not None:
+            if winner == self.color:
+                return 1
+            elif winner == self.opponent[self.color]:
+                return 0
+            elif winner == -1:
+                return 0.5
+
+
+
 
 
 
@@ -136,9 +143,9 @@ class Node():
 
 
 
-    def addChild(self, node):
+    def addChild(self, board):
         #Adds a new child to this node
-        node.parent = self
+        newChild = Node(board, parent = self)
         self.children.append(node)
 
 
