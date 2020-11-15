@@ -53,8 +53,8 @@ class StudentAI():
         maxVisits = 0
         newNode = node
         for i in node.children:
-            if i.visits > maxVisits:
-                maxVisits = i.visits
+            if i.wins/i.visits >= maxVisits:
+                maxVisits = i.wins/i.visits
                 newNode = i
 
         return newNode
@@ -74,7 +74,7 @@ class StudentAI():
             if not self.checkFullExpand(node):
 
                 allowedMoves = node.board.get_all_possible_moves(node.color)
-                #allowedmoves[0][0]
+
                 newMove = 0
 
                 for index in range(len(allowedMoves)):
@@ -101,7 +101,7 @@ class StudentAI():
 
 
 
-    def chooseBestChild(self, node, constant = 1):
+    def chooseBestChild(self, node, constant = 2):
         #Choose the best child based on UCB formula
         score = 0 #Keeps track of best UCB value
         childrenList = [] #List of nodes in case the UCB value is tied in different children
