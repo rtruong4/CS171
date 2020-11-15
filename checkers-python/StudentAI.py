@@ -38,7 +38,7 @@ class StudentAI():
     def mctSearch(self, root):
         currentTime = time.time()
 
-        while (time.time() - currentTime) < 2 and len(root.board.get_all_possible_moves(self.color)) > 0:
+        while (time.time() - currentTime) < 1 and len(root.board.get_all_possible_moves(self.color)) > 0:
             leaf = self.tree_policy(root)
             simResult = self.rollout(leaf)
             self.backpropogate(leaf, simResult)
@@ -63,22 +63,22 @@ class StudentAI():
         counter = 0
         allowedMoves = node.board.get_all_possible_moves(node.color)
 
-        for index in range(len(allowedMoves) - 1):
-            for inner_index in range(len(allowedMoves[index]) - 1):
+        for index in range(len(allowedMoves)):
+            for inner_index in range(len(allowedMoves[index])):
                 counter += 1
 
-        return len(node.visitedMoves) == counter
+        return len(node.children) == counter
 
     def tree_policy(self, node):
         while not self.is_terminal(node.board, node.color):
             if not self.checkFullExpand(node):
 
                 allowedMoves = node.board.get_all_possible_moves(node.color)
-
+                #allowedmoves[0][0]
                 newMove = 0
 
-                for index in range(len(allowedMoves) - 1):
-                    for inner_index in range(len(allowedMoves[index]) - 1):
+                for index in range(len(allowedMoves)):
+                    for inner_index in range(len(allowedMoves[index])):
                         move = allowedMoves[index][inner_index]
                         if move not in node.visitedMoves:
                             newMove = move
