@@ -24,9 +24,9 @@ class StudentAI():
         else:
             self.color = 1
 
-        rootNode = Node(self.board)
-        newMove = self.mctSearch(rootNode) #Returns a node
-        move = newMove #Move is a node type
+        rootNode = Node(board = self.board, color = self.color)
+        newNode = self.mctSearch(rootNode) #Returns a node
+        move = newNode.move #Move is a node type
         self.board.make_move(move,self.color)
         return move
 
@@ -39,8 +39,8 @@ class StudentAI():
         currentTime = time.time()
 
         while (time.time() - currentTime) < 2 and len(root.board.get_all_possible_moves(self.color)) > 0:
-            leaf = self.traverse(root)
-            simResult = self.simulate(leaf)
+            leaf = self.tree_policy(root)
+            simResult = self.rollout(leaf)
             self.backpropogate(leaf, simResult)
 
 
@@ -48,37 +48,64 @@ class StudentAI():
 
 
 
+
+    def bestMove(self, node):
+        maxVisits = 0
+        newNode = node
+        for i in node.children:
+            if i.visits > maxVisits:
+                maxVisits = i.visits
+                newNode = i
+
+        return newNode
+
     def checkFullExpand(self, node):
-        return len(node.board.get_all_possible_moves(self.color)) == len(list(node.children))
+        counter = 0
+        allowedMoves = node.board.get_all_possible_moves(node.color)
 
-    # def tree_policy(self, node):
-    #     while not self.is_terminal(node.board):
-    #         if not self.checkFullExpand(node):
-    #             allowedMoves = node.board.get_all_possible_moves(self.color)
-    #
-    #             index = randint(0, len(allowedMoves) - 1)
-    #             inner_index = randint(0, len(allowedMoves[index]) - 1)
-    #             move = allowedMoves[index][inner_index]
-    #
-    #             newBoard = node.board.make_move(move, self.color)
+        for index in range(len(allowedMoves) - 1):
+            for inner_index in range(len(allowedMoves[index]) - 1):
+                counter += 1
 
+        return len(node.visitedMoves) == counter
+
+    def tree_policy(self, node):
+        while not self.is_terminal(node.board, node.color):
+            if not self.checkFullExpand(node):
+
+                allowedMoves = node.board.get_all_possible_moves(node.color)
+
+                newMove = 0
+
+                for index in range(len(allowedMoves) - 1):
+                    for inner_index in range(len(allowedMoves[index]) - 1):
+                        move = allowedMoves[index][inner_index]
+                        if move not in node.visitedMoves:
+                            newMove = move
+
+
+                node.visitedMoves.append(newMove)
+                newNode = node.addChild(newMove, node.board, self.color)
+
+                return newNode
+
+            else:
+                return self.chooseBestChild(node)
+
+        return node
 
 
 
 
       
-    def backpropogate(self, node, result):
-        #Update the current move with the simulation result
-        if node.parent == None: return #Stop backpropogating at root node
-        node.visits += 1
-        node.wins += result
-        self.backpropogate(node.parent) #Recursively call backpropogate function
+
 
 
     def chooseBestChild(self, node, constant = 1):
         #Choose the best child based on UCB formula
         score = 0 #Keeps track of best UCB value
         childrenList = [] #List of nodes in case the UCB value is tied in different children
+
         for child in node.children:
             explore = math.sqrt(math.log(node.visits)/float(child.visits))
             x = child.wins/child.visits
@@ -95,14 +122,16 @@ class StudentAI():
 
 
 
-    def is_terminal(self, board):
-        return not len(board.get_all_possible_moves) > 0
+    def is_terminal(self, board, color):
+
+        return not len(board.get_all_possible_moves(color)) > 0
 
     def rollout(self, node):
         """From the given board, simulate a random game until win, loss, or tie and return the appropriate value"""
         boardCopy = copy.deepcopy(node.board)
         currColor = 1
-        while not self.is_terminal(boardCopy):
+        color = self.color
+        while not self.is_terminal(boardCopy, color):
             if currColor == 1:
                 color = self.color
             elif currColor == -1:
@@ -118,15 +147,22 @@ class StudentAI():
             color *= -1
 
         winner = boardCopy.is_win(self.color)
-        if winner is not None:
-            if winner == self.color:
-                return 1
-            elif winner == self.opponent[self.color]:
-                return 0
-            elif winner == -1:
-                return 0.5
+        if winner == self.color:
+            return 1
+        elif winner == self.opponent[self.color]:
+            return 0
+        elif winner == -1:
+            return 0.5
+        else:
+            return 0
 
 
+    def backpropogate(self, node, result):
+        #Update the current move with the simulation result
+        if node.parent == None: return #Stop backpropogating at root node
+        node.visits += 1
+        node.wins += result
+        self.backpropogate(node.parent, result) #Recursively call backpropogate function
 
 
 
@@ -134,19 +170,25 @@ class StudentAI():
 
 class Node():
 
-    def __init__(self, board, parent = None):
+    def __init__(self,  board, color, move = None, parent = None):
         self.board = board
+        self.move = move #This is the move used to get to this state
         self.children = []
         self.parent = parent
         self.visits = 1
         self.wins = 0
+        self.color = color
+        self.visitedMoves = [] #visitedMoves is a list of move objects
 
 
 
-    def addChild(self, board):
+    def addChild(self, move, prevBoard, color):
         #Adds a new child to this node
-        newChild = Node(board, parent = self)
-        self.children.append(node)
+        bCopy = copy.deepcopy((prevBoard))
+        bCopy.make_move(move, color)
+        newChild = Node(bCopy, color, move, parent = self)
+        self.children.append(newChild)
+        return newChild
 
 
     def hasChild(self):
