@@ -38,7 +38,7 @@ class StudentAI():
     def mctSearch(self, root):
         currentTime = time.time()
 
-        while (time.time() - currentTime) < 1 and len(root.board.get_all_possible_moves(self.color)) > 0:
+        while (time.time() - currentTime) < 15 and len(root.board.get_all_possible_moves(self.color)) > 0:
             leaf = self.tree_policy(root)
             simResult = self.rollout(leaf)
             self.backpropogate(leaf, simResult)
