@@ -7,6 +7,7 @@ import copy
 import time
 #The following part should be completed by students.
 #Students can modify anything except the class name and exisiting functions and varibles.
+
 class StudentAI():
 
     def __init__(self,col,row,p):
@@ -24,9 +25,9 @@ class StudentAI():
         else:
             self.color = 1
 
-
-        newMove = self.mctSearch(move)
-
+        rootNode = Node(board = self.board, color = self.color)
+        newNode = self.mctSearch(rootNode) #Returns a node
+        move = newNode.move #Move is a node type
         self.board.make_move(move,self.color)
         return move
 
@@ -38,46 +39,77 @@ class StudentAI():
     def mctSearch(self, root):
         currentTime = time.time()
 
-        while (time.time() - currentTime) < 15 and len(root.get_all_possible_moves) > 0:
-            leaf = self.traverse(root)
-            simResult = self.simulate(leaf)
+
+        while (time.time() - currentTime) < 15 and len(root.board.get_all_possible_moves(self.color)) > 0:
+            leaf = self.tree_policy(root)
+
+            simResult = self.rollout(leaf)
             self.backpropogate(leaf, simResult)
 
 
         return self.bestMove(root)
 
 
-    def traverse(self, node):
-        #Find next node to traverse
-        if not node.hasChild():
-            return node #Return current node if there are no child nodes
-        else:
-            for child in node.childrenList:
-                if child.visits == 1:
-                    return child #Return child that has not been visited
-            return self.chooseBestChild(node) #Return best child if all children are visited
 
 
     def bestMove(self, node):
+        maxRatio = 0
+        newNode = node
+        for i in node.children:
+            if i.wins/i.visits >= maxRatio:
+                maxRatio = i.wins/i.visits
+                newNode = i
 
-        def visitNum(n):
-            return n.wins/n.visits
+        return newNode
 
-        return max(node.children, key = visitNum)
+    def checkFullExpand(self, node):
+        counter = 0
+        allowedMoves = node.board.get_all_possible_moves(node.color)
+
+        for index in range(len(allowedMoves)):
+            for inner_index in range(len(allowedMoves[index])):
+                counter += 1
+
+        return len(node.children) == counter
+
+    def tree_policy(self, node):
+        while not self.is_terminal(node.board, node.color):
+            if not self.checkFullExpand(node):
+
+                allowedMoves = node.board.get_all_possible_moves(node.color)
+
+
+                listOfUnvisited = []
+                for index in range(len(allowedMoves)):
+                    for inner_index in range(len(allowedMoves[index])):
+                        move = allowedMoves[index][inner_index]
+                        if move not in node.visitedMoves:
+                            listOfUnvisited.append(move)
+
+                newMove = random.choice(listOfUnvisited)
+
+                node.visitedMoves.append(newMove)
+                newNode = node.addChild(newMove, node.board, self.color)
+
+                return newNode
+
+            else:
+                return self.chooseBestChild(node)
+
+        return node
+
+
+
+
       
-      
-    def backpropogate(self, node, result):
-        #Update the current move with the simulation result
-        if node.parent == None: return #Stop backpropogating at root node
-        node.visits += 1
-        node.wins += result
-        self.backpropogate(node.parent) #Recursively call backpropogate function
 
 
-    def chooseBestChild(self, node, constant = 1):
+
+    def chooseBestChild(self, node, constant = 1.44):
         #Choose the best child based on UCB formula
         score = 0 #Keeps track of best UCB value
         childrenList = [] #List of nodes in case the UCB value is tied in different children
+
         for child in node.children:
             explore = math.sqrt(math.log(node.visits)/float(child.visits))
             x = child.wins/child.visits
@@ -94,48 +126,73 @@ class StudentAI():
 
 
 
+    def is_terminal(self, board, color):
 
-    def simulate(self, node):
+        return not len(board.get_all_possible_moves(color)) > 0
 
+    def rollout(self, node):
         """From the given board, simulate a random game until win, loss, or tie and return the appropriate value"""
-        boardState = copy.deepcopy(node.board)
+        boardCopy = copy.deepcopy(node.board)
+        currColor = 1
+        color = self.color
+        while not self.is_terminal(boardCopy, color):
+            if currColor == 1:
+                color = self.color
+            elif currColor == -1:
+                color = self.opponent[self.color]
+
+            allowedMoves = boardCopy.get_all_possible_moves(color)
+
+            index = randint(0, len(allowedMoves) - 1)
+            inner_index = randint(0, len(allowedMoves[index]) - 1)
+            move = allowedMoves[index][inner_index]
+
+            boardCopy.make_move(move, color)
+            color *= -1
+
+        winner = boardCopy.is_win(self.color)
+        if winner == self.color:
+            return 1
+        elif winner == self.opponent[self.color]:
+            return 0
+        elif winner == -1:
+            return 0.8
+        else:
+            return 0
 
 
-        while True:
-            allowedMoves = boardState.get_all_possible_moves(self.color)
+    def backpropogate(self, node, result):
+        #Update the current move with the simulation result
+        if node.parent == None: return #Stop backpropogating at root node
+        node.visits += 1
+        node.wins += result
+        self.backpropogate(node.parent, result) #Recursively call backpropogate function
 
-            if len(allowedMoves) == 0:
-                winner = boardState.is_win(self.color)
-                if winner is not None:
-                    if winner == self.color:
-                        return 1
-                    elif winner == self.opponent[self.color]:
-                        return 0
-                    elif winner == -1:
-                        return 0.5
-                    #If winner == 0 do nothing
-
-            randomMove = random.choice(allowedMoves)
-            boardState.make_move(randomMove, self.color)
 
 
 
 
 class Node():
 
-    def __init__(self, board, parent = None):
+    def __init__(self,  board, color, move = None, parent = None):
         self.board = board
+        self.move = move #This is the move used to get to this state
         self.children = []
         self.parent = parent
         self.visits = 1
         self.wins = 0
+        self.color = color
+        self.visitedMoves = [] #visitedMoves is a list of move objects
 
 
 
-    def addChild(self, node):
+    def addChild(self, move, prevBoard, color):
         #Adds a new child to this node
-        node.parent = self
-        self.children.append(node)
+        bCopy = copy.deepcopy((prevBoard))
+        bCopy.make_move(move, color)
+        newChild = Node(bCopy, color, move, parent = self)
+        self.children.append(newChild)
+        return newChild
 
 
     def hasChild(self):
