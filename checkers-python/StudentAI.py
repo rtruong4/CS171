@@ -41,7 +41,7 @@ class StudentAI():
         currentTime = time.time()
 
         #iter = 0
-        while (time.time() - currentTime) < 5 and len(root.board.get_all_possible_moves(self.color)) > 0:
+        while (time.time() - currentTime) < 15 and len(root.board.get_all_possible_moves(self.color)) > 0:
         #while iter < 2 and len(root.board.get_all_possible_moves(self.color)) > 0:
             leaf = self.tree_policy(root)
 
@@ -98,12 +98,10 @@ class StudentAI():
                 newMove = random.choice(listOfUnvisited)
                 currNode.visitedMoves.append(newMove)
 
-
-
                 bCopy = copy.deepcopy((currNode.board))
                 bCopy.make_move(newMove, currNode.color)
 
-                newNode = Node(bCopy, self.getOppositeColor(currNode.color), newMove, currNode)
+                newNode = Node(bCopy, self.getOppositeColor(currNode.color), move = newMove, parent = currNode)
                 currNode.addChild(newNode)
                 return newNode
 
