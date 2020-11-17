@@ -26,6 +26,7 @@ class StudentAI():
             self.color = 1
 
         rootNode = Node(board = self.board, color = self.color)
+        rootNode.parent = None
         newNode = self.mctSearch(rootNode) #Returns a node
         move = newNode.move #Move is a node type
         self.board.make_move(move,self.color)
@@ -63,24 +64,29 @@ class StudentAI():
 
         return newNode
 
-    def checkFullExpand(self, node):
-        counter = 0
+    def checkNotFullExpand(self, node):
+        possibleMoves = 0
         allowedMoves = node.board.get_all_possible_moves(node.color)
 
         for index in range(len(allowedMoves)):
             for inner_index in range(len(allowedMoves[index])):
-                counter += 1
+                possibleMoves += 1
 
-        return len(node.children) == counter
+        return len(node.visitedMoves) < possibleMoves
+
+
+    def is_not_terminal(self, board, color):
+        return len(board.get_all_possible_moves(color)) > 0
+        #return board.is_win(color) == 0
+
 
     def tree_policy(self, node):
         currNode = node
-        currColor = node.color
-        while not self.is_terminal(currNode.board, currColor):
+        while self.is_not_terminal(currNode.board, currNode.color):
 
-            if not self.checkFullExpand(currNode):
+            if self.checkNotFullExpand(currNode):
 
-                allowedMoves = currNode.board.get_all_possible_moves(currColor)
+                allowedMoves = currNode.board.get_all_possible_moves(currNode.color)
 
                 listOfUnvisited = []
                 for index in range(len(allowedMoves)):
@@ -91,14 +97,19 @@ class StudentAI():
 
                 newMove = random.choice(listOfUnvisited)
                 currNode.visitedMoves.append(newMove)
-                newNode = currNode.addChild(newMove, currNode.board, currColor)
 
+
+
+                bCopy = copy.deepcopy((currNode.board))
+                bCopy.make_move(newMove, currNode.color)
+
+                newNode = Node(bCopy, self.getOppositeColor(currNode.color), newMove, currNode)
+                currNode.addChild(newNode)
                 return newNode
 
             else:
                 currNode = self.chooseBestChild(currNode)
 
-            currColor = self.getOppositeColor(currColor)
 
         return currNode
 
@@ -111,15 +122,15 @@ class StudentAI():
 
     def chooseBestChild(self, node, constant = 1.414):
         #Choose the best child based on UCB formula
-        score = 0 #Keeps track of best UCB value
+        score = -1 #Keeps track of best UCB value
         bestChild = None  #List of nodes in case the UCB value is tied in different children
 
         for child in node.children:
-            explore = math.sqrt((math.log(node.visits))/float(child.visits))
-            x = (child.wins/child.visits)
+            explore = float(math.sqrt((math.log(node.visits))/float(child.visits)))
+            x = float(child.wins/child.visits)
             ucb = x + (constant * explore)
 
-            if ucb >= score:
+            if ucb > score:
                 bestChild = child
                 score = ucb
 
@@ -127,9 +138,7 @@ class StudentAI():
 
 
 
-    def is_terminal(self, board, color):
 
-        return len(board.get_all_possible_moves(color)) == 0
 
 
     def getOppositeColor(self, color):
@@ -142,7 +151,7 @@ class StudentAI():
         """From the given board, simulate a random game until win, loss, or tie and return the appropriate value"""
         boardCopy = copy.deepcopy(node.board)
         currColor = node.color
-        while not self.is_terminal(boardCopy, currColor):
+        while self.is_not_terminal(boardCopy, currColor):
 
             allowedMoves = boardCopy.get_all_possible_moves(currColor)
 
@@ -156,7 +165,7 @@ class StudentAI():
             currColor = self.getOppositeColor(currColor)
 
 
-        winner = boardCopy.is_win(currColor)
+        winner = boardCopy.is_win(self.getOppositeColor(currColor))
         if winner == self.color:
             return 1
         elif winner == self.opponent[self.color]:
@@ -164,7 +173,7 @@ class StudentAI():
         elif winner == -1:
             return 0.5
         else:
-            return False
+            raise ValueError
 
 
 
@@ -195,13 +204,12 @@ class Node():
 
 
 
-    def addChild(self, move, prevBoard, color):
+    def addChild(self, node):
         #Adds a new child to this node
-        bCopy = copy.deepcopy((prevBoard))
-        bCopy.make_move(move, color)
-        newChild = Node(bCopy, color, move, parent = self)
-        self.children.append(newChild)
-        return newChild
+
+
+        self.children.append(node)
+
 
 
     def hasChild(self):
