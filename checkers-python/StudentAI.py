@@ -39,29 +39,23 @@ class StudentAI():
   
     def mctSearch(self, root):
         currentTime = time.time()
-
-        #iter = 0
-        while (time.time() - currentTime) < 15 and len(root.board.get_all_possible_moves(self.color)) > 0:
-        #while iter < 2 and len(root.board.get_all_possible_moves(self.color)) > 0:
+        while (time.time() - currentTime) < 15:
             leaf = self.tree_policy(root)
-
             simResult = self.rollout(leaf)
             self.backpropogate(leaf, simResult)
-            #iter+= 1
 
         return self.bestMove(root)
 
 
 
 
-    def bestMove(self, node):
+    def bestMove(self, root):
         max = 0
         newNode = None
-        for i in node.children:
-            if i.wins/i.visits >= max:
-                max = i.wins/i.visits
+        for i in root.children:
+            if i.visits >= max:
+                max = i.visits
                 newNode = i
-
         return newNode
 
     def checkNotFullExpand(self, node):
@@ -82,8 +76,8 @@ class StudentAI():
 
     def tree_policy(self, node):
         currNode = node
+        iter = 0
         while self.is_not_terminal(currNode.board, currNode.color):
-
             if self.checkNotFullExpand(currNode):
 
                 allowedMoves = currNode.board.get_all_possible_moves(currNode.color)
@@ -100,7 +94,6 @@ class StudentAI():
 
                 bCopy = copy.deepcopy((currNode.board))
                 bCopy.make_move(newMove, currNode.color)
-
                 newNode = Node(bCopy, self.getOppositeColor(currNode.color), move = newMove, parent = currNode)
                 currNode.addChild(newNode)
                 return newNode
@@ -140,51 +133,95 @@ class StudentAI():
 
 
     def getOppositeColor(self, color):
-        if color == self.color:
-            return self.opponent[self.color]
+
+        if color == 2:
+            return 1
+        elif color == 1:
+            return 2
         else:
-            return self.color
+            raise ValueError
 
     def rollout(self, node):
         """From the given board, simulate a random game until win, loss, or tie and return the appropriate value"""
         boardCopy = copy.deepcopy(node.board)
         currColor = node.color
+        count = 0
         while self.is_not_terminal(boardCopy, currColor):
-
+            count += 1
             allowedMoves = boardCopy.get_all_possible_moves(currColor)
 
             index = randint(0, len(allowedMoves) - 1)
             inner_index = randint(0, len(allowedMoves[index]) - 1)
             move = allowedMoves[index][inner_index]
 
+
+
             boardCopy.make_move(move, currColor)
+
 
 
             currColor = self.getOppositeColor(currColor)
 
 
-        winner = boardCopy.is_win(self.getOppositeColor(currColor))
-        if winner == self.color:
-            return 1
-        elif winner == self.opponent[self.color]:
-            return 0
-        elif winner == -1:
-            return 0.5
-        else:
-            raise ValueError
+        return boardCopy.is_win(self.getOppositeColor(currColor))
+        # winner = boardCopy.is_win(self.getOppositeColor(currColor))
+        # if winner == self.color:
+        #     return 1
+        # elif winner == self.opponent[self.color]:
+        #     return 0
+        # elif winner == -1:
+        #     return 0.5
+        # else:
+        #     raise ValueError
 
 
 
     def backpropogate(self, node, result):
         #Update the current move with the simulation result
-        if result == False:
-            return
+        #result = 0 means the opponent won, result = 1 means that our ai won
+        # while node.parent is not None:
+        #     node.visits += 1
+        #     node.wins += result
+        #     node = node.parent
+        # return
+
+
         while node.parent is not None:
-            node.visits += 1
-            node.wins += result
+
+            #if node.color == self.color:
+            if node.color == self.opponent[self.color]:
+            #If the color of the node is our color
+
+                if result == self.opponent[self.color]:
+                    node.visits += 1
+                elif result == self.color:
+                    node.wins += 1
+                    node.visits += 1
+                elif result == -1:
+                    node.wins += 0.5
+                    node.visits += 1
+            elif node.color == self.color:
+            #elif node.color == self.opponent[self.color]:
+            #If the color of the node is the opposite color
+                if result == self.opponent[self.color]:
+                    node.wins += 1
+                    node.visits += 1
+                elif result == self.color:
+                    node.visits += 1
+                elif result == -1:
+                    node.wins += 0.5
+                    node.visits += 1
+            else:
+                raise ValueError
             node = node.parent
+        return
 
-
+    def amtAbove(self, node):
+        count = 0
+        while node.parent is not None:
+            count += 1
+            node = node.parent
+        return count
 
 
 
