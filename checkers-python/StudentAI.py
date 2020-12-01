@@ -76,10 +76,8 @@ class StudentAI():
 
     def tree_policy(self, node):
         currNode = node
-        iter = 0
         while self.is_not_terminal(currNode.board, currNode.color):
             if self.checkNotFullExpand(currNode):
-
                 allowedMoves = currNode.board.get_all_possible_moves(currNode.color)
 
                 listOfUnvisited = []
@@ -117,7 +115,7 @@ class StudentAI():
         bestChild = None  #List of nodes in case the UCB value is tied in different children
 
         for child in node.children:
-            explore = float(math.sqrt((math.log(node.visits))/float(child.visits)))
+            explore = float(math.sqrt(((math.log(node.visits))/float(child.visits))))
             x = float(child.wins/child.visits)
             ucb = x + (constant * explore)
 
@@ -133,7 +131,6 @@ class StudentAI():
 
 
     def getOppositeColor(self, color):
-
         if color == 2:
             return 1
         elif color == 1:
@@ -188,29 +185,32 @@ class StudentAI():
 
         while node.parent is not None:
 
-            #if node.color == self.color:
-            if node.color == self.opponent[self.color]:
+            if node.color == self.color:
+            #if node.color == self.opponent[self.color]:
             #If the color of the node is our color
-
-                if result == self.opponent[self.color]:
+                if result == node.color:
                     node.visits += 1
-                elif result == self.color:
+                elif result == self.getOppositeColor(node.color):
                     node.wins += 1
                     node.visits += 1
                 elif result == -1:
                     node.wins += 0.5
                     node.visits += 1
-            elif node.color == self.color:
-            #elif node.color == self.opponent[self.color]:
+                else:
+                    raise ValueError
+            #elif node.color == self.color:
+            elif node.color == self.opponent[self.color]:
             #If the color of the node is the opposite color
-                if result == self.opponent[self.color]:
-                    node.wins += 1
+                if result == node.color:
                     node.visits += 1
-                elif result == self.color:
+                elif result == self.getOppositeColor(node.color):
+                    node.wins += 1
                     node.visits += 1
                 elif result == -1:
                     node.wins += 0.5
                     node.visits += 1
+                else:
+                    raise ValueError
             else:
                 raise ValueError
             node = node.parent
