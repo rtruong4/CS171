@@ -44,7 +44,7 @@ class StudentAI():
         countTime = 0
         global rollTime
         rollTime = 0
-        while (time.time() - currentTime) < 15:
+        while (time.time() - currentTime) < 1:
             counter+= 1
             leaf = self.tree_policy(root)
             simResult = self.rollout(leaf)
@@ -59,8 +59,9 @@ class StudentAI():
         max = 0
         newNode = None
         for i in root.children:
-            if i.visits >= max:
-                max = i.visits
+            winrate = i.wins/i.visits
+            if winrate >= max:
+                max = winrate
                 newNode = i
         return newNode
 
@@ -123,10 +124,7 @@ class StudentAI():
                 return newNode
 
             else:
-
                 currNode = self.chooseBestChild(currNode)
-
-
 
         return currNode
 
@@ -138,7 +136,7 @@ class StudentAI():
 
 
     # def chooseBestChild(self, node, constant = 1.414):
-    def chooseBestChild(self, node, constant=0.8):
+    def chooseBestChild(self, node, constant=1.414):
         #Choose the best child based on UCB formula
         score = -1 #Keeps track of best UCB value
         bestChild = None  #List of nodes in case the UCB value is tied in different children
@@ -184,13 +182,11 @@ class StudentAI():
 
             move = random.choice(random.choice(allowedMoves))
 
-
             boardCopy.make_move(move, currColor)
 
             currColor = self.getOppositeColor(currColor)
 
             allowedMoves = boardCopy.get_all_possible_moves(currColor)
-
 
         return boardCopy.is_win(self.getOppositeColor(currColor))
         # winner = boardCopy.is_win(self.getOppositeColor(currColor))
@@ -244,6 +240,16 @@ class StudentAI():
             #         raise ValueError
             # else:
             #     raise ValueError
+            # if result == node.color:
+            #     node.visits += 1
+            # elif result == self.getOppositeColor(node.color):
+            #     node.wins += 1
+            #     node.visits += 1
+            # elif result == -1:
+            #     node.wins += 0.5
+            #     node.visits += 1
+            # else:
+            #      raise ValueError
             if result == node.color:
                 node.visits += 1
             elif result == self.getOppositeColor(node.color):
@@ -256,14 +262,6 @@ class StudentAI():
                  raise ValueError
             node = node.parent
         return
-
-    def amtAbove(self, node):
-        count = 0
-        while node.parent is not None:
-            count += 1
-            node = node.parent
-        return count
-
 
 
 class Node():
