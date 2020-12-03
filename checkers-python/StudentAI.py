@@ -42,12 +42,14 @@ class StudentAI():
         currentTime = time.time()
         counter = 0
         countTime = 0
+        global rollTime
+        rollTime = 0
         while (time.time() - currentTime) < 15:
             counter+= 1
             leaf = self.tree_policy(root)
             simResult = self.rollout(leaf)
             self.backpropogate(leaf, simResult)
-        raise ValueError(counter)
+        #raise ValueError(counter)
         return self.bestMove(root)
 
 
@@ -63,20 +65,24 @@ class StudentAI():
         return newNode
 
     def checkNotFullExpand(self, node):
-        possibleMoves = 0
-        allowedMoves = node.board.get_all_possible_moves(node.color)
+        # possibleMoves = 0
+        # allowedMoves = node.board.get_all_possible_moves(node.color)
+        #
+        # for index in range(len(allowedMoves)):
+        #     for inner_index in range(len(allowedMoves[index])):
+        #         possibleMoves += 1
+        #
+        # return len(node.children) < possibleMoves
+        return len(node.unvisitedMoves) > 0
 
-        for index in range(len(allowedMoves)):
-            for inner_index in range(len(allowedMoves[index])):
-                possibleMoves += 1
-
-        return len(node.children) < possibleMoves
 
 
-
-
+    def is_not_terminal(self, board, color):
+        #return len(board.get_all_possible_moves(color)) > 0
+        return board.is_win(color) == 0
 
     def tree_policy(self, node):
+        global rollTime
         currNode = node
         while self.is_not_terminal(currNode.board, currNode.color):
             if self.checkNotFullExpand(currNode):
@@ -101,15 +107,25 @@ class StudentAI():
                 #allowedMoves = currNode.board.get_all_possible_moves(currNode.color)
                 newMoveIndex = randint(0, len(currNode.unvisitedMoves) - 1)
                 newMove = currNode.unvisitedMoves.pop(newMoveIndex)
+
+
                 bCopy = copy.deepcopy((currNode.board))
+
+
                 bCopy.make_move(newMove, currNode.color)
+
+
+
                 newNode = Node(bCopy, self.getOppositeColor(currNode.color), move = newMove, parent = currNode)
+
+
                 currNode.addChild(newNode)
                 return newNode
 
-
             else:
+
                 currNode = self.chooseBestChild(currNode)
+
 
 
         return currNode
@@ -151,22 +167,22 @@ class StudentAI():
         else:
             raise ValueError
 
-    def is_not_terminal(self, board, color):
-        return len(board.get_all_possible_moves(color)) > 0
+
 
 
     def rollout(self, node):
         """From the given board, simulate a random game until win, loss, or tie and return the appropriate value"""
+        global rollTime
         boardCopy = copy.deepcopy(node.board)
         currColor = node.color
+
         allowedMoves = boardCopy.get_all_possible_moves(currColor)
+
+
+
         while len(allowedMoves) > 0:
 
-
-
-            index = randint(0, len(allowedMoves) - 1)
-            inner_index = randint(0, len(allowedMoves[index]) - 1)
-            move = allowedMoves[index][inner_index]
+            move = random.choice(random.choice(allowedMoves))
 
 
             boardCopy.make_move(move, currColor)
@@ -174,6 +190,8 @@ class StudentAI():
             currColor = self.getOppositeColor(currColor)
 
             allowedMoves = boardCopy.get_all_possible_moves(currColor)
+
+
         return boardCopy.is_win(self.getOppositeColor(currColor))
         # winner = boardCopy.is_win(self.getOppositeColor(currColor))
         # if winner == self.color:
