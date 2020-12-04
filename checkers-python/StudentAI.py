@@ -44,6 +44,8 @@ class StudentAI():
         countTime = 0
         global rollTime
         rollTime = 0
+        global numNodes
+        numNodes = 0
         while (time.time() - currentTime) < 1:
             counter+= 1
             leaf = self.tree_policy(root)
@@ -56,14 +58,14 @@ class StudentAI():
 
 
     def bestMove(self, root):
-        max = 0
+        max = -1
         newNode = None
         for i in root.children:
-            winrate = i.wins/i.visits
-            if winrate >= max:
-                max = winrate
+            if i.visits >= max:
+                max = i.visits
                 newNode = i
         return newNode
+
 
     def checkNotFullExpand(self, node):
         # possibleMoves = 0
@@ -74,7 +76,12 @@ class StudentAI():
         #         possibleMoves += 1
         #
         # return len(node.children) < possibleMoves
-        return len(node.unvisitedMoves) > 0
+
+        #return len(node.unvisitedMoves) > 0 and len(node.children) != node.amtMoves
+
+        return len(node.children) < node.amtMoves
+
+        #return len(node.unvisitedMoves) != 0 and len(node.children) != 0
 
 
 
@@ -107,24 +114,24 @@ class StudentAI():
 
                 #allowedMoves = currNode.board.get_all_possible_moves(currNode.color)
                 newMoveIndex = randint(0, len(currNode.unvisitedMoves) - 1)
-                newMove = currNode.unvisitedMoves.pop(newMoveIndex)
 
+                newMove = currNode.unvisitedMoves.pop(newMoveIndex)
 
                 bCopy = copy.deepcopy((currNode.board))
 
-
                 bCopy.make_move(newMove, currNode.color)
 
-
-
-                newNode = Node(bCopy, self.getOppositeColor(currNode.color), move = newMove, parent = currNode)
-
-
+                newNode = Node(bCopy, self.getOppositeColor(currNode.color), move=newMove, parent=currNode)
+                #newNode = Node(bCopy, (currNode.color), move=newMove, parent=currNode)
                 currNode.addChild(newNode)
+
                 return newNode
 
             else:
+                if len(currNode.children) == 0:
+                    raise ValueError(len(currNode.unvisitedMoves))
                 currNode = self.chooseBestChild(currNode)
+
 
         return currNode
 
@@ -136,7 +143,7 @@ class StudentAI():
 
 
     # def chooseBestChild(self, node, constant = 1.414):
-    def chooseBestChild(self, node, constant=1.414):
+    def chooseBestChild(self, node, constant = 1.414):
         #Choose the best child based on UCB formula
         score = -1 #Keeps track of best UCB value
         bestChild = None  #List of nodes in case the UCB value is tied in different children
@@ -146,10 +153,15 @@ class StudentAI():
             x = float(child.wins/child.visits)
             ucb = x + (constant * explore)
 
-            if ucb > score:
+            if ucb >= score:
                 bestChild = child
                 score = ucb
-
+        # if bestChild is not None:
+        #     return bestChild
+        # else:
+        #     return random.choice(node.children)
+        if bestChild == None:
+            raise ValueError("Best Child is none")
         return bestChild
 
 
@@ -189,6 +201,7 @@ class StudentAI():
             allowedMoves = boardCopy.get_all_possible_moves(currColor)
 
         return boardCopy.is_win(self.getOppositeColor(currColor))
+
         # winner = boardCopy.is_win(self.getOppositeColor(currColor))
         # if winner == self.color:
         #     return 1
@@ -250,17 +263,43 @@ class StudentAI():
             #     node.visits += 1
             # else:
             #      raise ValueError
-            if result == node.color:
-                node.visits += 1
-            elif result == self.getOppositeColor(node.color):
+
+
+            # if result == node.color:
+            #     node.visits += 1
+            # elif result == self.getOppositeColor(node.color):
+            #     node.wins += 1
+            #     node.visits += 1
+            # elif result == -1:
+            #     node.wins += 0.5
+            #     node.visits += 1
+            # else:
+            #      raise ValueError
+
+            node.visits += 1
+            if result == self.getOppositeColor(node.color):
                 node.wins += 1
-                node.visits += 1
             elif result == -1:
                 node.wins += 0.5
-                node.visits += 1
+            elif result == node.color:
+                node.wins += 0
             else:
-                 raise ValueError
+                 raise ValueError(node.color)
             node = node.parent
+
+
+        #This section is for updating the root node
+        node.visits += 1
+        if result == self.getOppositeColor(node.color):
+            node.wins += 1
+        elif result == -1:
+            node.wins += 0.5
+        elif result == node.color:
+            node.wins += 0
+        else:
+            raise ValueError
+
+
         return
 
 
@@ -271,15 +310,26 @@ class Node():
         self.move = move #This is the move used to get to this state
         self.children = []
         self.parent = parent
-        self.visits = 1
+        self.visits = 0
         self.wins = 0
         self.color = color
         self.unvisitedMoves = self.flatten(board.get_all_possible_moves(color)) #unvisitedMoves is a list of move objects
+        self.amtMoves = len(self.unvisitedMoves)
         #self.visitedMoves = []
 
 
+    def getOppositeColor(self, color):
+        if color == 2:
+            return 1
+        elif color == 1:
+            return 2
+        else:
+            raise ValueError
+
     def flatten(self, list):
         flatList = []
+        if len(list) == 0:
+            raise ValueError(len(self.board.get_all_possible_moves((self.color))))
         for sub in list:
             for item in sub:
                 flatList.append(item)
@@ -288,9 +338,9 @@ class Node():
     def addChild(self, node):
         #Adds a new child to this node
 
-
+        global numNodes
         self.children.append(node)
-
+        numNodes += 1
 
 
     def hasChild(self):
