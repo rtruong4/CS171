@@ -47,7 +47,7 @@ class StudentAI():
         rollTime = 0
         global numNodes
         numNodes = 0
-        while (time.time() - currentTime) < 1:
+        while (time.time() - currentTime) < 12:
             counter+= 1
             leaf = self.tree_policy(root)
             simResult = self.rollout(leaf)
