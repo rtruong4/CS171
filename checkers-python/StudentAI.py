@@ -40,6 +40,7 @@ class StudentAI():
   
     def mctSearch(self, root):
         currentTime = time.time()
+        global counter
         counter = 0
         countTime = 0
         global rollTime
@@ -87,7 +88,7 @@ class StudentAI():
 
     def is_not_terminal(self, board, color):
         #return len(board.get_all_possible_moves(color)) > 0
-        return board.is_win(color) == 0
+        return board.is_win(color) == 0 and board.is_win(self.getOppositeColor(color)) == 0
 
     def tree_policy(self, node):
         global rollTime
@@ -120,8 +121,10 @@ class StudentAI():
                 bCopy = copy.deepcopy((currNode.board))
 
                 bCopy.make_move(newMove, currNode.color)
+                #bCopy.make_move(newMove, self.getOppositeColor(currNode.color))
 
                 newNode = Node(bCopy, self.getOppositeColor(currNode.color), move=newMove, parent=currNode)
+
                 #newNode = Node(bCopy, (currNode.color), move=newMove, parent=currNode)
                 currNode.addChild(newNode)
 
@@ -134,6 +137,7 @@ class StudentAI():
 
 
         return currNode
+        #raise ValueError
 
 
 
@@ -225,6 +229,7 @@ class StudentAI():
 
 
         while node.parent is not None:
+            currColor = node.color
             # if node.color == self.color:
             # #if node.color == self.opponent[self.color]:
             # #If the color of the node is our color
@@ -277,28 +282,27 @@ class StudentAI():
             #      raise ValueError
 
             node.visits += 1
-            if result == self.getOppositeColor(node.color):
+            if result == self.getOppositeColor(currColor):
                 node.wins += 1
             elif result == -1:
                 node.wins += 0.5
-            elif result == node.color:
+            elif result == currColor:
                 node.wins += 0
             else:
-                 raise ValueError(node.color)
+                 raise ValueError(currColor)
             node = node.parent
 
 
         #This section is for updating the root node
         node.visits += 1
-        if result == self.getOppositeColor(node.color):
+        if result == self.getOppositeColor(currColor):
             node.wins += 1
         elif result == -1:
             node.wins += 0.5
-        elif result == node.color:
+        elif result == currColor:
             node.wins += 0
         else:
             raise ValueError
-
 
         return
 
@@ -328,8 +332,9 @@ class Node():
 
     def flatten(self, list):
         flatList = []
-        if len(list) == 0:
-            raise ValueError(len(self.board.get_all_possible_moves((self.color))))
+        global counter
+        # if len(list) == 0:
+        #     raise ValueError(self.color, len(self.board.get_all_possible_moves((self.color))), counter, len(self.board.get_all_possible_moves((self.getOppositeColor(self.color)))))
         for sub in list:
             for item in sub:
                 flatList.append(item)
